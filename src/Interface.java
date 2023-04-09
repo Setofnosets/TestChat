@@ -100,26 +100,26 @@ public class Interface {
                     @Override
                     public void run() {
                         chat.createServer(port);
+                        chat.initializeBuffer();
                     }
                 });
                 JOptionPane.showMessageDialog(null, "Waiting for connection...");
                 thread.start();
-                while (!chat.isConnected()){
+                frame.setVisible(false);
+                chatRoom();
+                /*while (!chat.isConnected()){
                     try {
                         Thread.sleep(1000);
                     } catch (InterruptedException e1) {
                         e1.printStackTrace();
                     }
-                }
-                frame.setVisible(false);
-                chatRoom();
+                }*/
+
             }
         });
     }
 
     private void chatRoom(){
-        //Init
-        chat.initializeBuffer();
         JFrame frame = new JFrame("Chat room");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setSize(500, 300);
@@ -176,9 +176,17 @@ public class Interface {
                         chatText.append(messages.get(messages.size()-1));
                         chatText.append("\n");
                         //Send notification
-                        SystemTray tray = SystemTray.getSystemTray();
+                       /* SystemTray tray = SystemTray.getSystemTray();
                         Image image = Toolkit.getDefaultToolkit().createImage("potato.png");
-
+                        TrayIcon trayIcon = new TrayIcon(image, "Tray Demo");
+                        trayIcon.setImageAutoSize(true);
+                        trayIcon.setToolTip("New Message");
+                        try {
+                            tray.add(trayIcon);
+                        } catch (AWTException e) {
+                            e.printStackTrace();
+                        }
+                        trayIcon.displayMessage("New message", "You have new message", TrayIcon.MessageType.INFO);*/
                         currentSize = messages.size();
                     }
                 }
@@ -190,8 +198,18 @@ public class Interface {
         Thread thread2 = new Thread(new Runnable() {
             @Override
             public void run() {
-                while (true){
-                    chat.receive();
+                while (true) {
+                    try {
+                        chat.receive();
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        try {
+                            Thread.sleep(1000);
+                        } catch (InterruptedException e1) {
+                            e1.printStackTrace();
+                        }
+                        run();
+                    }
                 }
             }
         });
@@ -199,7 +217,7 @@ public class Interface {
     }
 
     private void onButtonJoinClick(){
-//Create form
+        //Create form
         JFrame frame = new JFrame("Join server");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setSize(300, 300);
@@ -245,6 +263,7 @@ public class Interface {
                 int port = Integer.parseInt(textport.getText());
                 chat.setName(name);
                 chat.connect(ip, port);
+                chat.initializeBuffer();
                 JOptionPane.showMessageDialog(null, "Connecting...");
                 while (!chat.isConnected()){
                     try {
